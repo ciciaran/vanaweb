@@ -1,0 +1,377 @@
+import { swiperInit } from "./swiper";
+import gsap from "gsap";
+
+const stepsObj = {
+  "setup-1": { answer: "", value: 0 },
+  "setup-2": { answer: "", value: 1 },
+  "setup-3": { answer: "", value: 2 },
+  "setup-4": { answer: "", value: 3 },
+  "plan-1": { answer: "", value: 4 },
+  "plan-2": { answer: "", value: 5 },
+  "plan-3": { answer: "", value: 6 },
+  "plan-4": { answer: "", value: 7 },
+  "deploy-1": { answer: "", value: 8 },
+  "deploy-2": { answer: "", value: 9 },
+  "deploy-3": { answer: "", value: 10 },
+  "deploy-4": { answer: "", value: 11 },
+};
+
+const stepsObjForm = {
+  "setup-1": {
+    title: "Transaction hash",
+    subText: "Paste the transaction hash below to verify ",
+    placeholder: "Enter hash",
+    buttonMessage: "Submit",
+  },
+  "setup-2": {
+    title: "Transaction hash",
+    subText: "Paste the transaction hash below to verify ",
+    placeholder: "Enter hash",
+    buttonMessage: "Submit",
+  },
+  "setup-3": {
+    title: "Transaction hash",
+    subText: "Paste the transaction hash below to verify ",
+    placeholder: "Enter hash",
+    buttonMessage: "Submit",
+  },
+  "setup-4": {
+    title: "Transaction hash",
+    subText: "Paste the transaction hash below to verify ",
+    placeholder: "Enter hash",
+    buttonMessage: "Submit",
+  },
+  "plan-1": {
+    title: "Dataset Plan",
+    subText: "One of our experts will provide feedback within 48 hours",
+    placeholder: "Link to your doc (make sure we can comment on it)",
+    buttonMessage: "Submit for Feedback",
+  },
+  "plan-2": {
+    title: "Proof of Contribution",
+    subText: "One of our experts will provide feedback within 48 hours",
+    placeholder: "Link to your doc (make sure we can comment on it)",
+    buttonMessage: "Submit for Feedback",
+  },
+  "plan-3": {
+    title: "Tokenomics Plan",
+    subText: "One of our experts will provide feedback within 48 hours",
+    placeholder: "Link to your doc (make sure we can comment on it)",
+    buttonMessage: "Submit for Feedback",
+  },
+  "plan-4": {
+    title: "GTM Plan",
+    subText: "One of our experts will provide feedback within 48 hours",
+    placeholder: "Link to your doc (make sure we can comment on it)",
+    buttonMessage: "Submit for Feedback",
+  },
+  "deploy-1": {
+    title: "Launch Landing Page",
+    subText:
+      "Get your landing page featured on the Vana Website by submitting it below:",
+    placeholder: "https://",
+    buttonMessage: "Submit for a feature",
+  },
+  "deploy-2": { title: "", subText: "", placeholder: "", buttonMessage: "" },
+  "deploy-3": {
+    title: "Build Community",
+    subText:
+      "Get your community featured in Vana's twitter or discord by sharing a link:",
+    placeholder: "https://",
+    buttonMessage: "Submit for a feature!",
+  },
+  "deploy-4": {
+    title: "Launch Landing Page",
+    subText:
+      "Get your landing page featured on the Vana Website by submitting it below:",
+    placeholder: "https://",
+    buttonMessage: "Submit for a feature",
+  },
+};
+
+let userScore = Number(localStorage.getItem("userScore")) || 0;
+
+const getStageName = () => {
+  let path = window.location.pathname;
+  let segments = path.split("/");
+  let finalSegment = segments.pop() || segments.pop(); // Handle potential trailing slash
+  return finalSegment;
+};
+
+const routeThreshold = {
+  setup: 3,
+  plan: 3,
+  deploy: 7,
+};
+
+const redirectUser = () => {
+  localStorage.setItem("userPosition", `${getStageName().toLowerCase()}-${1}`);
+};
+
+export const stepFlow = () => {
+  const swiper = swiperInit();
+
+  redirectUser();
+
+  const inputValue = document.querySelector('[data-input="field"]');
+  const submitButton = document.querySelector('[data-form-btn="submit"]');
+  const triggerCloseBtn = document.querySelector('[data-dlp-trigger="close"]');
+  const triggerOpenBtn = document.querySelectorAll('[data-dlp-trigger="open"]');
+  const proceedButton = document.querySelectorAll('[data-dlp-trigger="none"]');
+  const submitState = document.querySelector(".submission-status");
+  const actionWrapper = document.querySelector(
+    '[data-dlp-slide="action-wrapper"]'
+  );
+  const backdrop = document.querySelector('[data-dlp-slide="backdrop"]');
+  const formHeading = document.querySelector('[data-dlp-form="heading"]');
+  const formsubHeading = document.querySelector(
+    '[data-dlp-form="sub-heading"]'
+  );
+
+  const updateUserScore = () => {
+    userScore++;
+    localStorage.setItem("userScore", userScore);
+  };
+
+  const handleFormSubmit = () => {
+    submitState.style.opacity = 1;
+    const answer = inputValue.value;
+    const stateUserPosition = localStorage.getItem("userPosition") || "setup-1";
+    const stateStepsObj =
+      JSON.parse(localStorage.getItem("stepObj")) || stepsObj;
+    if (!stateStepsObj[stateUserPosition].answer) {
+      updateUserScore();
+    }
+    stateStepsObj[stateUserPosition].answer = answer;
+    localStorage.setItem("stepObj", JSON.stringify(stateStepsObj));
+
+    setTimeout(() => {
+      submitState.style.opacity = 0;
+      inputValue.value = "";
+      changeUserPosition();
+      if (
+        localStorage.getItem("userPosition").split("-")[0] !==
+        getStageName().toLowerCase()
+      ) {
+        window.location.href = `/dlp/${localStorage
+          .getItem("userPosition")
+          .split("-")[0]
+          .toLowerCase()}`;
+      }
+    }, 1000);
+  };
+
+  const openActionModal = () => {
+    const gTl = gsap.timeline();
+
+    gTl
+      .to(backdrop, {
+        display: "flex",
+        duration: 0,
+      })
+      .to(backdrop, {
+        opacity: 1,
+        duration: 0.5,
+        ease: "expo.out",
+      })
+      .to(
+        actionWrapper,
+        {
+          x: 0,
+          duration: 0.5,
+          ease: "expo.inOut",
+        },
+        "-=0.3"
+      )
+      .to(triggerCloseBtn, {
+        opacity: 1,
+        duration: 0.5,
+      });
+
+    const stateStepsObj = JSON.parse(localStorage.getItem("stepObj"));
+
+    const stateUserPosition = localStorage.getItem("userPosition");
+
+    if (stateStepsObj && stateUserPosition) {
+      inputValue.value = stateStepsObj[stateUserPosition].answer;
+    }
+
+    if (inputValue.value) {
+      submitButton.classList.remove("disabled");
+    } else {
+      submitButton.classList.add("disabled");
+    }
+
+    updateFormCopy();
+
+    inputValue.addEventListener("change", (e) => {
+      if (!e.target.value) {
+        submitButton.classList.add("disabled");
+      } else {
+        submitButton.classList.remove("disabled");
+      }
+    });
+
+    submitButton.addEventListener("click", handleFormSubmit);
+  };
+
+  const closeActionModal = () => {
+    inputValue.value = "";
+    const gTl = gsap.timeline();
+
+    gTl
+      .to(triggerCloseBtn, {
+        oapcity: 0,
+        duration: 0.5,
+      })
+      .to(actionWrapper, {
+        x: "100%",
+        duration: 0.5,
+      })
+      .to(
+        backdrop,
+        {
+          opacity: 0,
+        },
+        "-0.7"
+      )
+      .to(
+        backdrop,
+        {
+          display: "none",
+        },
+        "<"
+      );
+  };
+
+  Array.from(triggerOpenBtn).forEach((item) => {
+    item.addEventListener("click", openActionModal);
+  });
+
+  proceedButton.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      inputValue.value = "pass";
+      handleFormSubmit();
+    });
+  });
+
+  triggerCloseBtn.addEventListener("click", closeActionModal);
+
+  const updateFormCopy = () => {
+    const stateUserPosition = localStorage.getItem("userPosition");
+    formHeading.textContent = stepsObjForm[stateUserPosition].title;
+    formsubHeading.textContent = stepsObjForm[stateUserPosition].subText;
+    inputValue.setAttribute(
+      "placeholder",
+      stepsObjForm[stateUserPosition].placeholder
+    );
+    submitButton.textContent = stepsObjForm[stateUserPosition].buttonMessage;
+  };
+
+  const changeUserPosition = (nextStage) => {
+    let _currentStageIndex = 0;
+    let nextStep = "";
+    const value = inputValue.value;
+    const stateUserPosition = localStorage.getItem("userPosition") || "setup-1";
+
+    if (!nextStage) {
+      const steps = Object.keys(stepsObj);
+      _currentStageIndex =
+        steps.indexOf(stateUserPosition) > -1
+          ? steps.indexOf(stateUserPosition)
+          : 0;
+
+      nextStep = steps[_currentStageIndex + 1];
+
+      console.log("steps", steps);
+      console.log("nextStep", nextStep);
+      console.log("_currentStageIndex", _currentStageIndex);
+
+      stepsObj[steps[_currentStageIndex]].answer = value;
+
+      localStorage.setItem("userPosition", nextStep);
+      closeActionModal();
+      swiper.slideNext();
+    } else {
+      localStorage.setItem("userPosition", nextStage);
+      swiper.slideTo(Number(nextStage.split("-")[1]) - 1);
+    }
+    updateUI();
+  };
+
+  const swiperPagination = document.querySelectorAll(
+    "span.swiper-pagination-bullet"
+  );
+
+  swiperPagination.forEach((btn, index) => {
+    btn.addEventListener("click", () => {
+      const currentStage = localStorage.getItem("userPosition").split("-")[0];
+      changeUserPosition(`${currentStage}-${index + 1}`);
+    });
+  });
+
+  const updateUI = () => {
+    const pageLinks = document.querySelectorAll("a.swiper-pagination-bullet");
+    const statusTag = document.querySelectorAll(".status");
+    const stateStepsObj =
+      JSON.parse(localStorage.getItem("stepObj")) || stepsObj;
+    const stateUserPosition = localStorage.getItem("userPosition") || "setup-1";
+    const stateUserPositionText = stateUserPosition.split("-")[0];
+    const currentStageIndex = stateUserPosition.split("-")[1] - 1;
+
+    swiperPagination.forEach((btn, index) => {
+      if (
+        !btn.classList.contains("swiper-pagination-bullet-active") &&
+        stateStepsObj[`${stateUserPositionText}-${index + 1}`].answer
+      ) {
+        btn.classList.add("swiper-pagination-bullet__completed");
+      } else {
+        btn.classList.remove("swiper-pagination-bullet__completed");
+      }
+    });
+
+    if (stateStepsObj[stateUserPosition].answer) {
+      statusTag[currentStageIndex].classList.remove("incomplete");
+      statusTag[currentStageIndex].classList.add("complete");
+      statusTag[currentStageIndex].textContent = "Complete";
+    } else {
+      statusTag[currentStageIndex].classList.remove("complete");
+      statusTag[currentStageIndex].classList.add("incomplete");
+      statusTag[currentStageIndex].textContent = "incomplete";
+    }
+
+    statusTag[currentStageIndex].style.opacity = 1;
+
+    if (
+      userScore > routeThreshold["setup"] &&
+      getStageName().toLowerCase() !== "setup"
+    ) {
+      pageLinks[0].classList.add("swiper-pagination-bullet__completed");
+    }
+
+    if (getStageName().toLowerCase() !== "setup") {
+      if (userScore > routeThreshold["plan"]) {
+        pageLinks[0].classList.add("swiper-pagination-bullet__completed");
+      }
+      if (userScore > routeThreshold["deploy"]) {
+        pageLinks[1].classList.add("swiper-pagination-bullet__completed");
+      }
+    } else if (getStageName().toLowerCase() !== "plan") {
+      if (userScore > routeThreshold["setup"]) {
+        pageLinks[0].classList.add("swiper-pagination-bullet__completed");
+      }
+      if (userScore > routeThreshold["deploy"]) {
+        pageLinks[1].classList.add("swiper-pagination-bullet__completed");
+      }
+    } else {
+      if (userScore > routeThreshold["setup"]) {
+        pageLinks[0].classList.add("swiper-pagination-bullet__completed");
+      }
+      if (userScore > routeThreshold["plan"]) {
+        pageLinks[1].classList.add("swiper-pagination-bullet__completed");
+      }
+    }
+  };
+
+  updateUI();
+};
